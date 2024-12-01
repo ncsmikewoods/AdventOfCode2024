@@ -29,9 +29,32 @@ public class Solver
 
     public int Solve2()
     {
-        return 2;
+        var valueMap = GetValueMap(_right);
+
+        var similarityScore = _left.Sum(x =>
+        {
+            valueMap.TryGetValue(x, out var multiplier);
+            return x * multiplier;
+        });
+        return similarityScore;
     }
 
+    Dictionary<int, int> GetValueMap(List<int> values)
+    {
+        var map = new Dictionary<int, int>();
+
+        foreach (var val in values)
+        {
+            if (!map.ContainsKey(val))
+            {
+                map[val] = 1;
+                continue;
+            }
+            map[val]++;
+        }
+
+        return map;
+    }
 
     void GetInputs()
     {
