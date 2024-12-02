@@ -14,23 +14,45 @@ public class Solver
         var fails = _reports
             .Where(report => !IsSafe(report))
             .ToList();
-
-        // foreach (var fail in fails)
-        // {
-        //     Console.WriteLine($"Fail: {string.Join(" ", fail)}");
-        // }
         
         return _reports.Count - fails.Count;
     }
 
     public int Solve2()
     {
-        return 1;
+        var fails = _reports
+            .Where(report => !IsSafeish(report))
+            .ToList();
+        
+        return _reports.Count - fails.Count;
     }
 
     bool IsSafe(List<int> report)
     {
+        var failedLevels = GetFailedLevels(report);
+        return failedLevels.Count == 0;
+    }
+    
+    bool IsSafeish(List<int> report)
+    {
+        var failedLevels = GetFailedLevels(report);
+        if (failedLevels.Count == 0) return true;
+        
+        for (var i = 0; i < report.Count; i++)
+        {
+            var copy = report.ToList();
+            copy.RemoveAt(i);
+
+            if (IsSafe(copy)) return true;
+        }
+
+        return false;
+    }
+    
+    List<int> GetFailedLevels(List<int> report)
+    {
         var isAscending = true;
+        var failedIndexes = new List<int>();
 
         for (var i = 1; i < report.Count; i++)
         {
@@ -40,27 +62,22 @@ public class Solver
             var didIncrease = curr > prev;
             var diff = Math.Abs(prev - curr);
             
+            if (i == 1) isAscending = didIncrease;
+            
             // Rule 1
-            if (i == 1)
+            if (didIncrease != isAscending)
             {
-                isAscending = didIncrease;
-            }
-            else
-            {
-                if (didIncrease != isAscending)
-                {
-                    return false;
-                }
+                failedIndexes.Add(i);
             }
             
             // Rule 2
             if (diff is < 1 or > 3)
             {
-                return false;
+                failedIndexes.Add(i);
             }
         }
 
-        return true;
+        return failedIndexes.Distinct().ToList();
     }
     
     void GetInputs()
