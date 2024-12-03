@@ -4,51 +4,61 @@ namespace Day03;
 
 public class Solver
 {
-    private List<Instruction> _instructions;
-
-    public Solver()
-    {
-        GetInputs();
-    }
-
     public double Solve1()
     {
-        return _instructions.Sum(x => x.Multiply());
+        var matches = GetInputs("input1.txt", @"mul\(\d{1,3},\d{1,3}\)");
+        return matches
+            .Sum(m => m.MultiplyInstruction());
     }
 
-    public int Solve2()
+    public double Solve2()
     {
-        return 1;
-    }
-
-    
-    void GetInputs()
-    {
-        var input = File.ReadAllText("input.txt");
-        var regex = new Regex(@"mul\(\d{1,3},\d{1,3}\)");
+        var matches = GetInputs("input2.txt", @"(mul\(\d{1,3},\d{1,3}\))|(do\(\))|(don\'t\(\))");
         
-        var matches = regex.Matches(input).Select(x => x.Value).ToList();
-        _instructions = matches.Select(m => new Instruction(m)).ToList();
+        var isEnabled = true;
+        var sum = 0d;
+        foreach (Match match in matches)
+        {
+            if (IsInstruction(match) && isEnabled)
+            {
+                sum += match.MultiplyInstruction();
+                continue;
+            }
+
+            isEnabled = IsToggleOn(match);
+        }
+        
+        return sum;
+    }
+
+    MatchCollection GetInputs(string fileName, string pattern)
+    {
+        var input = File.ReadAllText(fileName);
+        var regex = new Regex(pattern);
+        
+        return regex.Matches(input);
+    }
+
+    bool IsInstruction(Match match)
+    {
+        return match.Value.StartsWith("mul");
+    }
+
+    bool IsToggleOn(Match match)
+    {
+        return match.Value == "do()";
     }
 }
 
-public class Instruction
+public static class MatchExtension
 {
-    public Instruction(string operation)
+    public static double MultiplyInstruction(this Match match)
     {
+        var operation = match.Value;
         var tokens = operation.Split(["mul", ",", "(", ")"], StringSplitOptions.RemoveEmptyEntries);
 
-        Operation = operation;
-        Left = int.Parse(tokens[0]);
-        Right = int.Parse(tokens[1]);
-    }
-    
-    public string Operation { get; set; }
-    public int Left { get; set; }
-    public int Right { get; set; }
-
-    public double Multiply()
-    {
-        return Left * Right;
+        var left = int.Parse(tokens[0]);
+        var right = int.Parse(tokens[1]);
+        return left * right;
     }
 }
