@@ -13,52 +13,46 @@ public class Solver
     
     public int Solve1()
     {
-        // var rules = _rules.ToList();
-        // var sortedPages = new string[_uniqueValues.Count];
-        //
-        // // extract this.  filter it to only apply to rules involved in an update
-        // for (var i = 0; i < _uniqueValues.Count; i++)
-        // {
-        //     var start = FindLeftmostNumber(rules);
-        //     sortedPages[i] = start;
-        //     Console.WriteLine("Next leftmost number: " + start);
-        //     
-        //     var subsetRules = rules.Where(rule => rule[0] == start).ToList();
-        //     
-        //     rules = rules.Except(subsetRules).ToList();
-        //
-        //     // Maybe some of this isn't necessary
-        //     if (rules.Count == 0 && subsetRules.Count == 1)
-        //     {
-        //         sortedPages[i + 1] = subsetRules[0][1];
-        //         break;
-        //     }
-        // }
-        //
-        // Console.WriteLine(string.Join(",", sortedPages));
-        // var validUpdates = _updates.Where(update => IsUpdateValid(update, sortedPages));
-
-        var updateResults = new List<string[]>();
+        var validUpdates = new List<string[]>();
         foreach (var update in _updates)
         {
-            Console.WriteLine("Checking update: " + string.Join(",", update));
-            // sub-select the rules to only hte ones involved in the update
+            // sub-select the rules to only the ones involved in the update
             var subrules = _rules.Where(rule =>
                 update.Contains(rule[0]) && update.Contains(rule[1])).ToList();
 
-            var result = IsValidUpdate(update, subrules);
+            var (isValid, idealOrder) = IsValidUpdate(update, subrules);
 
-            if (result)
+            if (isValid)
             {
-                Console.WriteLine("Valid");
-                updateResults.Add(update);
+                validUpdates.Add(update);
             }
         }
         
-        return updateResults.Sum(x => int.Parse(GetMiddleElement(x)));
+        return validUpdates.Sum(x => int.Parse(GetMiddleElement(x)));
+    }
+    
+    public int Solve2()
+    {
+        var fixedUpdates = new List<string[]>();
+        
+        foreach (var update in _updates)
+        {
+            // sub-select the rules to only the ones involved in the update
+            var subrules = _rules.Where(rule =>
+                update.Contains(rule[0]) && update.Contains(rule[1])).ToList();
+
+            var (isValid, idealOrder) = IsValidUpdate(update, subrules);
+
+            if (!isValid)
+            {
+                fixedUpdates.Add(idealOrder);
+            }
+        }
+        
+        return fixedUpdates.Sum(x => int.Parse(GetMiddleElement(x)));
     }
 
-    bool IsValidUpdate(string[] update, List<string[]> rules)
+    (bool, string[]) IsValidUpdate(string[] update, List<string[]> rules)
     {
         var sortedPages = new string[_uniqueValues.Count];
 
@@ -66,7 +60,6 @@ public class Solver
         {
             var start = FindLeftmostNumber(rules);
             sortedPages[i] = start;
-            // Console.WriteLine("Next leftmost number: " + start);
             
             var subsetRules = rules.Where(rule => rule[0] == start).ToList();
             
@@ -81,42 +74,11 @@ public class Solver
         }
         
         var sortedUpdates = update.OrderBy(x => Array.IndexOf(sortedPages, x)).ToArray();
-        return update.SequenceEqual(sortedUpdates); 
+        return (update.SequenceEqual(sortedUpdates), sortedUpdates); 
     }
-    
-    public int Solve2()
-    {
-        return 1;
-    }
-
-    // bool IsUpdateValid(string[] update, string[] sortedPages)
-    // {
-    //     var sortedUpdates = update.OrderBy(x => Array.IndexOf(sortedPages, x)).ToArray();
-    //     return update.SequenceEqual(sortedUpdates); 
-    // }
-    
     
     string FindLeftmostNumber(List<string[]> rules)
     {
-        // var uniques = rules.SelectMany(x => x).Distinct().ToList();
-        // var rights = rules.Select(rule => rule[1]).Distinct().Order().ToList();
-        // var lefts = rules.Select(rule => rule[0]).Distinct().Order().ToList();
-        //
-        // var starter = uniques.Except(rights);
-        // return starter.First();
-
-        // // find a rule where the left side is not on the right side of any other rule
-        // foreach (var rule in rules)
-        // {
-        //     var left = rule[0];
-        //     if (rules.All(r => r[1] != left))
-        //     {
-        //         return left;
-        //     }
-        // }
-        //
-        // return "0"; // shouldn't happen
-
         var lefts = rules.Select(rule => rule[0]).Distinct();
         var rights = rules.Select(rule => rule[1]).Distinct();
         
